@@ -1,38 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { PlantCard } from '../components/PlantCard';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { mockPlants } from '../data/plants'; // ✅ ADDED
+import { usePlants } from '../hooks/usePlants'; // ✅ our new hook
 
 export const ExplorePage = () => {
-  const [plants, setPlants] = useState([]);
+  const { plants, loading, error } = usePlants(); // fetch API or fallback
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
 
-  // ✅ USE MOCK DATA INSTEAD OF API
-  useEffect(() => {
-    setPlants(mockPlants);
-  }, []);
+  const filteredPlants = useMemo(
+    () =>
+      difficultyFilter === 'all'
+        ? plants.filter(
+            (p) =>
+              p.common_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              p.scientific_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              p.description.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : plants.filter(
+            (p) =>
+              (p.common_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.scientific_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
+              p.difficulty === difficultyFilter
+          ),
+    [plants, searchQuery, difficultyFilter]
+  );
 
-  // ✅ FILTER LIKE ORIGINAL
-  const filteredPlants =
-    difficultyFilter === 'all'
-      ? plants.filter(p =>
-          p.common_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.scientific_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      : plants.filter(p =>
-          (p.common_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           p.scientific_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           p.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
-          p.difficulty === difficultyFilter
-        );
+  if (loading)
+    return <p className="text-center py-16">Loading plants...</p>;
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
         <div className="mb-8 md:mb-12">
           <h1 className="mb-3 text-gray-900 font-bold text-3xl">Explore Plants</h1>
@@ -48,7 +52,7 @@ export const ExplorePage = () => {
                 type="text"
                 placeholder="Search by name or type..."
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 pr-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-base"
               />
             </div>
@@ -79,7 +83,7 @@ export const ExplorePage = () => {
         {/* Plants Grid */}
         {filteredPlants.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {filteredPlants.map(plant => (
+            {filteredPlants.map((plant) => (
               <PlantCard key={plant.id} plant={plant} />
             ))}
           </div>
@@ -92,7 +96,6 @@ export const ExplorePage = () => {
             <p className="text-gray-500">Try adjusting your search or filter criteria</p>
           </div>
         )}
-
       </div>
     </div>
   );
