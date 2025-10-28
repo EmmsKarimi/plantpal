@@ -3,59 +3,37 @@ import { Search, Filter } from 'lucide-react';
 import { PlantCard } from '../components/PlantCard';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import axios from 'axios';
-
-const API_KEY = "usr-yAA3zNvMOAUOevT-e8HrXwVTce1XfR-yozjAlsM9BEQ";
-const BASE_URL = "https://trefle.io/api/v1/plants";
+import { mockPlants } from '../data/plants'; // ✅ ADDED
 
 export const ExplorePage = () => {
   const [plants, setPlants] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
-  const [loading, setLoading] = useState(false);
 
+  // ✅ USE MOCK DATA INSTEAD OF API
   useEffect(() => {
-    const fetchPlants = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(BASE_URL, {
-          params: {
-            token: API_KEY,
-            page: 1,
-            per_page: 30,
-            q: searchQuery || undefined
-          },
-        });
+    setPlants(mockPlants);
+  }, []);
 
-        const mappedPlants = response.data.data.map(plant => ({
-          id: plant.id,
-          common_name: plant.common_name || 'Unknown',
-          scientific_name: plant.scientific_name || '',
-          description: plant.common_name || 'No description available',
-          image_url: plant.image_url || 'https://via.placeholder.com/400x300?text=No+Image',
-          difficulty: ['Easy', 'Moderate', 'Hard'][Math.floor(Math.random() * 3)]
-        }));
-
-        setPlants(mappedPlants);
-      } catch (err) {
-        console.error('Error fetching plants:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlants();
-  }, [searchQuery]);
-
+  // ✅ FILTER LIKE ORIGINAL
   const filteredPlants =
     difficultyFilter === 'all'
-      ? plants
-      : plants.filter(p => p.difficulty === difficultyFilter);
+      ? plants.filter(p =>
+          p.common_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.scientific_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      : plants.filter(p =>
+          (p.common_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           p.scientific_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           p.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          p.difficulty === difficultyFilter
+        );
 
   return (
-    <div className="min-h-screen bg-white"> {/* removed green background */}
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {/* Page Header */}
+
+        {/* Header */}
         <div className="mb-8 md:mb-12">
           <h1 className="mb-3 text-gray-900 font-bold text-3xl">Explore Plants</h1>
           <p className="text-lg text-gray-600">Discover beautiful plants and learn how to care for them</p>
@@ -99,9 +77,7 @@ export const ExplorePage = () => {
         </div>
 
         {/* Plants Grid */}
-        {loading ? (
-          <p className="text-center py-20 text-gray-500">Loading plants...</p>
-        ) : filteredPlants.length > 0 ? (
+        {filteredPlants.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {filteredPlants.map(plant => (
               <PlantCard key={plant.id} plant={plant} />
@@ -116,6 +92,7 @@ export const ExplorePage = () => {
             <p className="text-gray-500">Try adjusting your search or filter criteria</p>
           </div>
         )}
+
       </div>
     </div>
   );

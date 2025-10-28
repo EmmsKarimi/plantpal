@@ -35,8 +35,9 @@ export const PlantCard = ({ plant }) => {
       <Link to={`/plant/${plant.id}`}>
         <div className="relative aspect-[4/3] overflow-hidden bg-gray-50 rounded-t-2xl">
           <ImageWithFallback
-            src={plant.image_url}
-            alt={plant.common_name}
+            src={plant.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}
+            fallback="https://via.placeholder.com/400x300?text=No+Image"
+            alt={plant.common_name || 'Plant image'}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
 
@@ -62,13 +63,13 @@ export const PlantCard = ({ plant }) => {
 
         <CardContent className="p-4 md:p-5">
           <h3 className="mb-1 text-gray-900 group-hover:text-green-700 transition-colors line-clamp-1 font-semibold">
-            {plant.common_name}
+            {plant.common_name || 'Unknown Plant'}
           </h3>
           <p className="text-sm text-gray-500 italic mb-3 line-clamp-1">
-            {plant.scientific_name}
+            {plant.scientific_name || 'Unknown'}
           </p>
           <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-            {plant.description}
+            {plant.description || 'No description available'}
           </p>
           <Button className="w-full bg-green-600 hover:bg-green-700 text-white gap-2">
             <Eye className="w-4 h-4" />
